@@ -45,39 +45,41 @@ router.post("/signup", async (req, res) => {
 
     const mailOptions = emailVerificationTemplate(newUser, url);
 
-    transporter.sendMail(mailOptions, (err, info) => {
-      console.log("inside send mail");
-      console.error(err);
-      if (err)
-        return res.status(409).json({
-          message: "Error sending email! 😢",
-          type: "error",
-        });
-      return res.json({
-        message: "Email verification link has been sent to your email! 📧",
-        type: "success",
-      });
+    await transporter.sendMail(mailOptions);
+    console.log("after email");
+    //     (err, info) => {
+    //     console.log("inside send mail");
+    //     console.error(err);
+    //     if (err)
+    //       return res.status(409).json({
+    //         message: "Error sending email! 😢",
+    //         type: "error",
+    //       });
+    //     return res.json({
+    //       message: "Email verification link has been sent to your email! 📧",
+    //       type: "success",
+    //     });
+    //   });
+    // } catch (error) {
+    //   res.status(500).json({
+    //     type: "error",
+    //     message: "Error sending email!",
+    //     error,
+    //   });
+    // }
+    // 4. send the response
+    res.status(200).json({
+      message:
+        "User created successfully! Email verification link has been sent to your email! 📧",
+      type: "success",
     });
   } catch (error) {
     res.status(500).json({
       type: "error",
-      message: "Error sending email!",
+      message: "Error creating user!",
       error,
     });
   }
-  // 4. send the response
-  res.status(200).json({
-    message:
-      "User created successfully! Email verification link has been sent to your email! 📧",
-    type: "success",
-  });
-  // } catch (error) {
-  //   res.status(500).json({
-  //     type: "error",
-  //     message: "Error creating user!",
-  //     error,
-  //   });
-  // }
 });
 
 // importing the helper functions
