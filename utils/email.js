@@ -4,9 +4,7 @@ const createPasswordResetUrl = (id, token) =>
   `${process.env.CLIENT_URL}/reset-password/${id}/${token}`;
 
 const transporter = createTransport({
-  host: process.env.EMAIL_HOST,
-  port: 587,
-  secure: false,
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
