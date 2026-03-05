@@ -4,6 +4,12 @@ const { hash, compare } = require("bcryptjs");
 // importing the user model
 const User = require("../models/user");
 // Sign Up request
+const { createEmailVerificationToken } = require("../utils/tokens");
+const {
+  createEmailVerifcationUrl,
+  emailVerificationTemplate,
+  emailVerificationConfirmationTemplate,
+} = require("../utils/email");
 router.post("/signup", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -25,18 +31,46 @@ router.post("/signup", async (req, res) => {
     });
     // 3. save the user to the database
     await newUser.save();
-    // 4. send the response
-    res.status(200).json({
-      message: "User created successfully! 🥳",
-      type: "success",
+    const token = createEmailVerificationToken(user);
+    // { ...user, createdAt: Date.now() }
+    // create the password reset url
+
+    const url = createEmailVerifcationUrl(user._id, token);
+    // send the email
+
+    const mailOptions = emailVerificationTemplate(user, url);
+
+    transporter.sendMail(mailOptions, (err, info) => {
+      console.error(err);
+      if (err)
+        return res.status(409).json({
+          message: "Error sending email! 😢",
+          type: "error",
+        });
+      return res.json({
+        message: "Email verification link has been sent to your email! 📧",
+        type: "success",
+      });
     });
   } catch (error) {
     res.status(500).json({
       type: "error",
-      message: "Error creating user!",
+      message: "Error sending email!",
       error,
     });
   }
+  // 4. send the response
+  res.status(200).json({
+    message: "User created successfully! 🥳",
+    type: "success",
+  });
+  // } catch (error) {
+  //   res.status(500).json({
+  //     type: "error",
+  //     message: "Error creating user!",
+  //     error,
+  //   });
+  // }
 });
 
 // importing the helper functions
@@ -287,57 +321,51 @@ router.post("/reset-password/:id/:token", async (req, res) => {
   }
 });
 
-const { createEmailVerificationToken } = require("../utils/tokens");
-const {
-  createEmailVerifcationUrl,
-  emailVerificationTemplate,
-  emailVerificationConfirmationTemplate,
-} = require("../utils/email");
-// send password reset email
-router.post("/verify-email", async (req, res) => {
-  try {
-    // get the user from the request body
-    const { email } = req.body;
-    // find the user by email
-    const user = await User.findOne({ email });
+// // send password reset email
+// router.post("/verify-email", async (req, res) => {
+//   try {
+//     // get the user from the request body
+//     const { email } = req.body;
+//     // find the user by email
+//     const user = await User.findOne({ email });
 
-    // if the user doesn't exist, return error
-    if (!user)
-      return res.status(500).json({
-        message: "User doesn't exist! 😢",
-        type: "error",
-      });
-    // create a password reset token
+//     // if the user doesn't exist, return error
+//     if (!user)
+//       return res.status(500).json({
+//         message: "User doesn't exist! 😢",
+//         type: "error",
+//       });
+//     // create a password reset token
 
-    const token = createEmailVerificationToken(user);
-    // { ...user, createdAt: Date.now() }
-    // create the password reset url
+//     const token = createEmailVerificationToken(user);
+//     // { ...user, createdAt: Date.now() }
+//     // create the password reset url
 
-    const url = createEmailVerifcationUrl(user._id, token);
-    // send the email
+//     const url = createEmailVerifcationUrl(user._id, token);
+//     // send the email
 
-    const mailOptions = emailVerificationTemplate(user, url);
+//     const mailOptions = emailVerificationTemplate(user, url);
 
-    transporter.sendMail(mailOptions, (err, info) => {
-      console.error(err);
-      if (err)
-        return res.status(409).json({
-          message: "Error sending email! 😢",
-          type: "error",
-        });
-      return res.json({
-        message: "Email verification link has been sent to your email! 📧",
-        type: "success",
-      });
-    });
-  } catch (error) {
-    res.status(500).json({
-      type: "error",
-      message: "Error sending email!",
-      error,
-    });
-  }
-});
+//     transporter.sendMail(mailOptions, (err, info) => {
+//       console.error(err);
+//       if (err)
+//         return res.status(409).json({
+//           message: "Error sending email! 😢",
+//           type: "error",
+//         });
+//       return res.json({
+//         message: "Email verification link has been sent to your email! 📧",
+//         type: "success",
+//       });
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       type: "error",
+//       message: "Error sending email!",
+//       error,
+//     });
+//   }
+// });
 
 router.post("/verify-email/:id/:token", async (req, res) => {
   try {
