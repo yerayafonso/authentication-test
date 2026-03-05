@@ -46,6 +46,7 @@ router.post("/signup", async (req, res) => {
     const mailOptions = emailVerificationTemplate(newUser, url);
 
     transporter.sendMail(mailOptions, (err, info) => {
+      console.log("inside send mail");
       console.error(err);
       if (err)
         return res.status(409).json({
