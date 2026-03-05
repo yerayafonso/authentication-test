@@ -200,6 +200,7 @@ router.post("/send-password-reset-email", async (req, res) => {
     const { email } = req.body;
     // find the user by email
     const user = await User.findOne({ email });
+
     // if the user doesn't exist, return error
     if (!user)
       return res.status(500).json({
@@ -207,12 +208,18 @@ router.post("/send-password-reset-email", async (req, res) => {
         type: "error",
       });
     // create a password reset token
-    const token = createPasswordResetToken({ ...user, createdAt: Date.now() });
+
+    const token = createPasswordResetToken(user);
+    // { ...user, createdAt: Date.now() }
     // create the password reset url
+
     const url = createPasswordResetUrl(user._id, token);
     // send the email
+
     const mailOptions = passwordResetTemplate(user, url);
+
     transporter.sendMail(mailOptions, (err, info) => {
+      console.error(err);
       if (err)
         return res.status(409).json({
           message: "Error sending email! 😢",
@@ -260,6 +267,106 @@ router.post("/reset-password/:id/:token", async (req, res) => {
     await user.save();
     // send the email
     const mailOptions = passwordResetConfirmationTemplate(user);
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err)
+        return res.status(500).json({
+          message: "Error sending email! 😢",
+          type: "error",
+        });
+      return res.json({
+        message: "Email sent! 📧",
+        type: "success",
+      });
+    });
+  } catch (error) {
+    res.status(500).json({
+      type: "error",
+      message: "Error sending email!",
+      error,
+    });
+  }
+});
+
+const { createEmailVerificationToken } = require("../utils/tokens");
+const {
+  createEmailVerifcationUrl,
+  emailVerificationTemplate,
+  emailVerificationConfirmationTemplate,
+} = require("../utils/email");
+// send password reset email
+router.post("/verify-email", async (req, res) => {
+  try {
+    // get the user from the request body
+    const { email } = req.body;
+    // find the user by email
+    const user = await User.findOne({ email });
+
+    // if the user doesn't exist, return error
+    if (!user)
+      return res.status(500).json({
+        message: "User doesn't exist! 😢",
+        type: "error",
+      });
+    // create a password reset token
+
+    const token = createEmailVerificationToken(user);
+    // { ...user, createdAt: Date.now() }
+    // create the password reset url
+
+    const url = createEmailVerifcationUrl(user._id, token);
+    // send the email
+
+    const mailOptions = emailVerificationTemplate(user, url);
+
+    transporter.sendMail(mailOptions, (err, info) => {
+      console.error(err);
+      if (err)
+        return res.status(409).json({
+          message: "Error sending email! 😢",
+          type: "error",
+        });
+      return res.json({
+        message: "Email verification link has been sent to your email! 📧",
+        type: "success",
+      });
+    });
+  } catch (error) {
+    res.status(500).json({
+      type: "error",
+      message: "Error sending email!",
+      error,
+    });
+  }
+});
+
+router.post("/verify-email/:id/:token", async (req, res) => {
+  try {
+    // get the user details from the url
+    const { id, token } = req.params;
+    // get the new password the request body
+    const { newPassword } = req.body;
+    // find the user by id
+    const user = await User.findById(id);
+    // if the user doesn't exist, return error
+    if (!user)
+      return res.status(500).json({
+        message: "User doesn't exist! 😢",
+        type: "error",
+      });
+    // verify if the token is valid
+    const isValid = verify(token, user.password);
+    // if the password reset token is invalid, return error
+    if (!isValid)
+      return res.status(500).json({
+        message: "Invalid token! 😢",
+        type: "error",
+      });
+    // set the user's password to the new password
+    user.password = await hash(newPassword, 10);
+    // save the user
+    await user.save();
+    // send the email
+    const mailOptions = emailVerificationConfirmationTemplate(user);
     transporter.sendMail(mailOptions, (err, info) => {
       if (err)
         return res.status(500).json({

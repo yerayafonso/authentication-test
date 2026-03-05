@@ -51,9 +51,63 @@ const passwordResetConfirmationTemplate = (user) => {
   };
 };
 
+const createEmailVerifcationUrl = (id, token) =>
+  `${process.env.CLIENT_URL}/verification/${id}/${token}`;
+
+// const transporter = createTransport({
+//   host: process.env.EMAIL_HOST,
+//   port: 587,
+//   secure: false,
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASSWORD,
+//   },
+// });
+
+const emailVerificationTemplate = (user, url) => {
+  const { username, email } = user;
+  return {
+    from: `Mail - <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: `Verify Email`,
+    html: `
+        <h2>Email Verification Link</h2>
+        <p>Verify your account by clicking on the link below:</p>
+        <a href=${url}><button>Verify</button></a>
+        <br />
+        <br />
+        <small><a style="color: #38A169" href=${url}>${url}</a></small>
+        <br />
+        <small>The link will expire in 15 mins!</small>
+        
+        <br /><br />
+        <p>Thanks,</p>
+        <p>Authentication API</p>`,
+  };
+};
+
+const emailVerificationConfirmationTemplate = (user) => {
+  const { email } = user;
+  return {
+    from: `Mail - <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: `Account Verified`,
+    html: `
+        <h2>Your email is verified</h2>
+        <p>You've successfully verified your email <${email}>. </p>
+        
+        <br /><br />
+        <p>Thanks,</p>
+        <p>Authentication API</p>`,
+  };
+};
+
 module.exports = {
   transporter,
   createPasswordResetUrl,
   passwordResetTemplate,
   passwordResetConfirmationTemplate,
+  createEmailVerifcationUrl,
+  emailVerificationTemplate,
+  emailVerificationConfirmationTemplate,
 };
