@@ -52,7 +52,7 @@ const passwordResetConfirmationTemplate = (user) => {
 };
 
 const createEmailVerifcationUrl = (id, token) =>
-  `${process.env.CLIENT_URL}/verification/${id}/${token}`;
+  `${process.env.CLIENT_URL}/auth/verify-email/${id}/${token}`;
 
 // const transporter = createTransport({
 //   host: process.env.EMAIL_HOST,

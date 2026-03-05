@@ -343,8 +343,7 @@ router.post("/verify-email/:id/:token", async (req, res) => {
   try {
     // get the user details from the url
     const { id, token } = req.params;
-    // get the new password the request body
-    const { newPassword } = req.body;
+
     // find the user by id
     const user = await User.findById(id);
     // if the user doesn't exist, return error
@@ -362,7 +361,7 @@ router.post("/verify-email/:id/:token", async (req, res) => {
         type: "error",
       });
     // set the user's password to the new password
-    user.password = await hash(newPassword, 10);
+    user.verified = true;
     // save the user
     await user.save();
     // send the email
