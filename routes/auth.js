@@ -10,6 +10,10 @@ const {
   emailVerificationTemplate,
   emailVerificationConfirmationTemplate,
 } = require("../utils/email");
+console.log("EMAIL_HOST:", process.env.EMAIL_HOST);
+console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("CLIENT_URL:", process.env.CLIENT_URL);
+// console.log("EMAIL_USER:", process.env.EMAIL_USER);
 router.post("/signup", async (req, res) => {
   try {
     const { email, password } = req.body;
