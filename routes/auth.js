@@ -31,14 +31,15 @@ router.post("/signup", async (req, res) => {
     });
     // 3. save the user to the database
     await newUser.save();
-    const token = createEmailVerificationToken(user);
+
+    const token = createEmailVerificationToken(newUser);
     // { ...user, createdAt: Date.now() }
     // create the password reset url
 
-    const url = createEmailVerifcationUrl(user._id, token);
+    const url = createEmailVerifcationUrl(newUser._id, token);
     // send the email
 
-    const mailOptions = emailVerificationTemplate(user, url);
+    const mailOptions = emailVerificationTemplate(newUser, url);
 
     transporter.sendMail(mailOptions, (err, info) => {
       console.error(err);
@@ -61,7 +62,8 @@ router.post("/signup", async (req, res) => {
   }
   // 4. send the response
   res.status(200).json({
-    message: "User created successfully! 🥳",
+    message:
+      "User created successfully! Email verification link has been sent to your email! 📧",
     type: "success",
   });
   // } catch (error) {
